@@ -200,11 +200,11 @@ Sometimes, you need to allocate money based on specific ratios, such as distribu
 
 ```typescript
 const profit = Money.of(987.65, Currency.of("EUR"));
-const [shareholderA, shareholderB, shareholderC] = profit.allocate(50, 30, 20);
+const [shareholderA, shareholderB, shareholderC] = profit.allocate(48, 41, 11);
 
-console.log(shareholderA.toString()); // Outputs: EUR 493.83
-console.log(shareholderB.toString()); // Outputs: EUR 296.30
-console.log(shareholderC.toString()); // Outputs: EUR 197.52
+console.log(shareholderA.toString()); // Outputs: EUR 474.08
+console.log(shareholderB.toString()); // Outputs: EUR 404.93
+console.log(shareholderC.toString()); // Outputs: EUR 108.64
 ```
 
 The `allocate()` method divides the `Money` object according to the provided ratios, ensuring that the total amount is accurately distributed and any remainder is handled correctly.

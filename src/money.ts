@@ -17,6 +17,18 @@ export class Money {
     return new Money(BigInt(minorAmount), currency);
   }
 
+  static zero(currency: Currency | string | number): Money {
+    let currencyInstance: Currency;
+
+    if (typeof currency === 'string' || typeof currency === 'number') {
+      currencyInstance = Currency.of(currency);
+    } else {
+      currencyInstance = currency;
+    }
+
+    return new Money(0, currencyInstance);
+  }
+
   toString(): string {
     return `${this.currency.getCurrencyCode()} ${this.getAmount()}`;
   }
@@ -42,32 +54,6 @@ export class Money {
     return new Money(this.roundDiv(this.amount * scaleFactor, divisorBigInt, roundingMode), this.currency);
   }
 
-  private roundDiv(dividend: bigint, divisor: bigint, roundingMode: RoundingMode): bigint {
-    const quotient = dividend / divisor;
-    const remainder = dividend % divisor;
-
-    if (remainder === 0n) return quotient;
-
-    const halfDivisor = divisor / 2n;
-
-    switch (roundingMode) {
-      case RoundingMode.UP:
-        return quotient + 1n;
-      case RoundingMode.DOWN:
-        return quotient;
-      case RoundingMode.CEILING:
-        return dividend > 0n ? quotient + 1n : quotient;
-      case RoundingMode.FLOOR:
-        return dividend < 0n ? quotient - 1n : quotient;
-      case RoundingMode.HALF_UP:
-        return remainder >= halfDivisor ? quotient + 1n : quotient;
-      case RoundingMode.HALF_DOWN:
-        return remainder > halfDivisor ? quotient + 1n : quotient;
-      case RoundingMode.HALF_EVEN:
-        return remainder > halfDivisor || (remainder === halfDivisor && quotient % 2n !== 0n) ? quotient + 1n : quotient;
-    }
-  }
-
   split(parts: number): Money[] {
     const equalParts = Array(parts).fill(1);
     return this.allocate(...equalParts);
@@ -78,23 +64,29 @@ export class Money {
       throw new Error('Cannot allocate with an empty list of ratios.');
     }
 
+    if (ratios.some((ratio) => ratio < 0)) {
+      throw new Error('Cannot allocate with negative ratios.');
+    }
+
+    if (ratios.some((ratio) => ratio === 0)) {
+      throw new Error('Cannot allocate to zero ratios.');
+    }
+
     const total = ratios.reduce((sum, ratio) => sum + ratio, 0);
+
     if (total === 0) {
-      throw new Error('Cannot allocate to zero ratios only.');
+      throw new Error('Cannot allocate to zero ratios.');
     }
 
-    const shares = ratios.map((ratio) => this.amount * BigInt(ratio) / BigInt(total));
-    let remainder = this.amount - shares.reduce((sum, share) => sum + share, 0n);
+    const shares = ratios.map((ratio) => this.multipliedBy(ratio).dividedBy(total, RoundingMode.DOWN));
+    let remainder = this.minus(shares.reduce((sum, share) => sum.plus(share), Money.zero(this.currency)));
 
-    const results = shares.map((share) => new Money(share, this.currency));
-
-    // Distribute the remainder starting from the first share
-    for (let i = 0; remainder > 0n; i++) {
-      results[i] = new Money(results[i].getMinorAmount() + 1n, this.currency);
-      remainder -= 1n;
+    for (let i = 0; !remainder.isZero(); i++) {
+      shares[i] = shares[i].plus(Money.ofMinor(1, this.currency));
+      remainder = remainder.minus(Money.ofMinor(1, this.currency));
     }
 
-    return results;
+    return shares;
   }
 
   getMinorAmount(): bigint {
@@ -112,12 +104,6 @@ export class Money {
     return this.currency;
   }
 
-  private assertSameCurrency(other: Money): void {
-    if (!this.currency.is(other.currency)) {
-      throw new Error('Cannot operate on Money with different currencies');
-    }
-  }
-
   formatTo(locale: string): string {
     return new Intl.NumberFormat(locale, this.getFormatOptions()).format(this.bigintToNumber(this.amount));
   }
@@ -125,15 +111,6 @@ export class Money {
   formatWith(options: Intl.NumberFormatOptions): string {
     return new Intl.NumberFormat(undefined, { ...this.getFormatOptions(), ...options })
       .format(this.bigintToNumber(this.amount));
-  }
-
-  private getFormatOptions(): Intl.NumberFormatOptions {
-    return {
-      style: 'currency',
-      currency: this.currency.getCurrencyCode(),
-      minimumFractionDigits: this.currency.getDefaultFractionDigits(),
-      maximumFractionDigits: this.currency.getDefaultFractionDigits(),
-    };
   }
 
   equals(other: Money): boolean {
@@ -163,6 +140,47 @@ export class Money {
 
   negated(): Money {
     return new Money(this.amount * -1n, this.currency);
+  }
+
+  private assertSameCurrency(other: Money): void {
+    if (!this.currency.is(other.currency)) {
+      throw new Error('Cannot operate on Money with different currencies');
+    }
+  }
+
+  private getFormatOptions(): Intl.NumberFormatOptions {
+    return {
+      style: 'currency',
+      currency: this.currency.getCurrencyCode(),
+      minimumFractionDigits: this.currency.getDefaultFractionDigits(),
+      maximumFractionDigits: this.currency.getDefaultFractionDigits(),
+    };
+  }
+
+  private roundDiv(dividend: bigint, divisor: bigint, roundingMode: RoundingMode): bigint {
+    const quotient = dividend / divisor;
+    const remainder = dividend % divisor;
+
+    if (remainder === 0n) return quotient;
+
+    const halfDivisor = divisor / 2n;
+
+    switch (roundingMode) {
+      case RoundingMode.UP:
+        return quotient + 1n;
+      case RoundingMode.DOWN:
+        return quotient;
+      case RoundingMode.CEILING:
+        return dividend > 0n ? quotient + 1n : quotient;
+      case RoundingMode.FLOOR:
+        return dividend < 0n ? quotient - 1n : quotient;
+      case RoundingMode.HALF_UP:
+        return remainder >= halfDivisor ? quotient + 1n : quotient;
+      case RoundingMode.HALF_DOWN:
+        return remainder > halfDivisor ? quotient + 1n : quotient;
+      case RoundingMode.HALF_EVEN:
+        return remainder > halfDivisor || (remainder === halfDivisor && quotient % 2n !== 0n) ? quotient + 1n : quotient;
+    }
   }
 
   private bigintToNumber(value: bigint): number {

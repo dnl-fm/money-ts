@@ -7,6 +7,7 @@ const mockCurrencyData: CurrencyEntry[] = [
   { code: 'EUR', numericCode: 978, name: 'Euro', defaultFractionDigits: 2 },
   { code: 'JPY', numericCode: 392, name: 'Japanese Yen', defaultFractionDigits: 0 },
   { code: 'CHF', numericCode: 756, name: 'Swiss Franc', defaultFractionDigits: 2 },
+  { code: 'BHD', numericCode: 48, name: 'Bahraini Dinar', defaultFractionDigits: 3 },
 ];
 
 Currency.loadIsoCurrencies(mockCurrencyData);
@@ -72,9 +73,9 @@ Deno.test("Money Class Tests", async (t) => {
   await t.step("allocate method with different ratios", () => {
     const money = Money.of(987.65, Currency.of('CHF'));
     const [shareholderA, shareholderB, shareholderC] = money.allocate(48, 41, 11);
-    assertEquals(shareholderA.toString(), 'CHF 474.10');
-    assertEquals(shareholderB.toString(), 'CHF 404.95');
-    assertEquals(shareholderC.toString(), 'CHF 108.60');
+    assertEquals(shareholderA.toString(), 'CHF 474.08');
+    assertEquals(shareholderB.toString(), 'CHF 404.93');
+    assertEquals(shareholderC.toString(), 'CHF 108.64');
   });
 
   await t.step("getMinorAmount and getAmount methods", () => {
@@ -142,5 +143,93 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(money.dividedBy(3, RoundingMode.FLOOR).toString(), 'USD 3.33');
     assertEquals(money.dividedBy(3, RoundingMode.CEILING).toString(), 'USD 3.34');
     assertEquals(money.dividedBy(3, RoundingMode.HALF_UP).toString(), 'USD 3.33');
+  });
+
+  await t.step("zero method", () => {
+    const zeroUSD = Money.zero('USD');
+    assertEquals(zeroUSD.toString(), 'USD 0.00');
+    const zeroBHD = Money.zero(Currency.of('BHD'));
+    assertEquals(zeroBHD.toString(), 'BHD 0.000');
+  });
+
+  await t.step("handling large amounts", () => {
+    const largeMoney = Money.of(1000000000.00, Currency.of('USD'));
+    assertEquals(largeMoney.toString(), 'USD 1000000000.00');
+  });
+
+  await t.step("handling small amounts", () => {
+    const smallMoney = Money.of(0.00000001, Currency.of('USD'));
+    assertEquals(smallMoney.toString(), 'USD 0.00');
+    const smallBHD = Money.of(0.00000001, Currency.of('BHD'));
+    assertEquals(smallBHD.toString(), 'BHD 0.000');
+  });
+
+  await t.step("different decimal places", () => {
+    const usd = Money.of(100, Currency.of('USD'));
+    const jpy = Money.of(100, Currency.of('JPY'));
+    const bhd = Money.of(100, Currency.of('BHD'));
+    assertEquals(usd.toString(), 'USD 100.00');
+    assertEquals(jpy.toString(), 'JPY 100');
+    assertEquals(bhd.toString(), 'BHD 100.000');
+  });
+
+  await t.step("invalid input to constructor", () => {
+    assertThrows(() => Money.of('invalid', Currency.of('USD')), Error);
+    assertThrows(() => new Money({} as any, Currency.of('USD')), Error);
+  });
+
+  await t.step("division by zero", () => {
+    const money = Money.of(100, Currency.of('USD'));
+    assertThrows(() => money.dividedBy(0), Error);
+  });
+
+  await t.step("invalid currency code", () => {
+    assertThrows(() => Currency.of('INVALID'), Error);
+  });
+
+  await t.step("immutability after operations", () => {
+    const original = Money.of(100, Currency.of('USD'));
+    const added = original.plus(Money.of(50, Currency.of('USD')));
+    assertEquals(original.toString(), 'USD 100.00');
+    assertEquals(added.toString(), 'USD 150.00');
+  });
+
+  await t.step("rounding behavior in arithmetic operations", () => {
+    const money = Money.of(10.005, Currency.of('USD'));
+    assertEquals(money.toString(), 'USD 10.01');
+    assertEquals(money.plus(Money.of(0.005, Currency.of('USD'))).toString(), 'USD 10.02');
+    assertEquals(money.minus(Money.of(0.005, Currency.of('USD'))).toString(), 'USD 10.00');
+  });
+
+  await t.step("allocate with zero ratio", () => {
+    const money = Money.of(100, Currency.of('USD'));
+    assertThrows(
+      () => money.allocate(0),
+      Error,
+      "Cannot allocate to zero ratios."
+    );
+    assertThrows(
+      () => money.allocate(1, 0, 1),
+      Error,
+      "Cannot allocate to zero ratios."
+    );
+  });
+  
+  await t.step("allocate with negative ratio", () => {
+    const money = Money.of(100, Currency.of('USD'));
+    assertThrows(() => money.allocate(-1), Error);
+    assertThrows(() => money.allocate(1, -1, 1), Error);
+  });
+
+  await t.step("split with invalid parts", () => {
+    const money = Money.of(100, Currency.of('USD'));
+    assertThrows(() => money.split(0), Error);
+    assertThrows(() => money.split(-1), Error);
+  });
+
+  await t.step("compareTo with different currencies", () => {
+    const usd = Money.of(100, Currency.of('USD'));
+    const eur = Money.of(100, Currency.of('EUR'));
+    assertThrows(() => usd.compareTo(eur), Error);
   });
 });
