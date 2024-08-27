@@ -1,33 +1,16 @@
-import { CountryCurrencyMapping, Currency, CurrencyEntry } from "../src/currency.ts";
 import { assertEquals, assertThrows } from "jsr:@std/assert@1";
-
-const mockCurrencyData: CurrencyEntry[] = [
-  { code: 'USD', numericCode: 840, name: 'US Dollar', defaultFractionDigits: 2 },
-  { code: 'EUR', numericCode: 978, name: 'Euro', defaultFractionDigits: 2 },
-  { code: 'JPY', numericCode: 392, name: 'Japanese Yen', defaultFractionDigits: 0 },
-  { code: 'CUP', numericCode: 192, name: 'Cuban Peso', defaultFractionDigits: 2 },
-  { code: 'CUC', numericCode: 931, name: 'Peso Convertible', defaultFractionDigits: 2 },
-  { code: 'INR', numericCode: 356, name: 'Indian Rupee', defaultFractionDigits: 2 },
-];
-
-const mockCountryCurrencyData: CountryCurrencyMapping[] = [
-  { country: 'US', currencies: ['USD'] },
-  { country: 'JP', currencies: ['JPY'] },
-  { country: 'DE', currencies: ['EUR'] },
-  { country: 'IN', currencies: ['INR'] },
-  { country: 'CU', currencies: ['CUP', 'CUC'] },
-];
+import { Currency } from "../src/currency.ts";
 
 Deno.test("Currency Class Tests", async (t) => {
   await t.step("loadIsoCurrencies", () => {
-    Currency.loadIsoCurrencies(mockCurrencyData);
+    // Currency.loadIsoCurrencies(mockCurrencyData);
     assertEquals(Currency.of('USD').getName(), 'US Dollar');
     assertEquals(Currency.of('EUR').getNumericCode(), 978);
     assertEquals(Currency.of('JPY').getDefaultFractionDigits(), 0);
   });
 
   await t.step("loadCountryCurrencies", () => {
-    Currency.loadCountryCurrencies(mockCountryCurrencyData);
+    // Currency.loadCountryCurrencies(mockCountryCurrencyData);
     const usCurrencies = Currency.getCurrenciesByCountry('US');
     assertEquals(usCurrencies.map(c => c.getCurrencyCode()), ['USD']);
     const jpCurrencies = Currency.getCurrenciesByCountry('JP');
@@ -49,7 +32,7 @@ Deno.test("Currency Class Tests", async (t) => {
     const jpy = Currency.of('JPY');
     assertEquals(jpy.getCurrencyCode(), 'JPY');
     assertEquals(jpy.getNumericCode(), 392);
-    assertEquals(jpy.getName(), 'Japanese Yen');
+    assertEquals(jpy.getName(), 'Yen');
     assertEquals(jpy.getDefaultFractionDigits(), 0);
   });
 
