@@ -29,12 +29,12 @@ export class Money {
 
   /**
    * Creates a new Money instance from a minor currency unit amount.
-   * @param {number} minorAmount - The amount in minor currency units.
+   * @param {bigint} minorAmount - The amount in minor currency units.
    * @param {Currency} currency - The currency of the monetary amount.
    * @returns {Money} A new Money instance.
    */
-  static ofMinor(minorAmount: number, currency: Currency): Money {
-    return new Money(BigInt(minorAmount), currency);
+  static ofMinor(minorAmount: bigint, currency: Currency): Money {
+    return new Money(minorAmount, currency);
   }
 
   /**
@@ -145,8 +145,8 @@ export class Money {
     let remainder = this.minus(shares.reduce((sum, share) => sum.plus(share), Money.zero(this.currency)));
 
     for (let i = 0; !remainder.isZero(); i++) {
-      shares[i] = shares[i].plus(Money.ofMinor(1, this.currency));
-      remainder = remainder.minus(Money.ofMinor(1, this.currency));
+      shares[i] = shares[i].plus(Money.ofMinor(1n, this.currency));
+      remainder = remainder.minus(Money.ofMinor(1n, this.currency));
     }
 
     return shares;

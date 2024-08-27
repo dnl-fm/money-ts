@@ -21,10 +21,10 @@ Deno.test("Money Class Tests", async (t) => {
   });
 
   await t.step("ofMinor method", () => {
-    const usd = Money.ofMinor(1050, Currency.of('USD'));
+    const usd = Money.ofMinor(1050n, Currency.of('USD'));
     assertEquals(usd.toString(), 'USD 10.50');
 
-    const jpy = Money.ofMinor(1050, Currency.of('JPY'));
+    const jpy = Money.ofMinor(1050n, Currency.of('JPY'));
     assertEquals(jpy.toString(), 'JPY 1050');
   });
   
