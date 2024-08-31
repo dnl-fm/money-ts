@@ -20,6 +20,13 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(moneyOf.toString(), 'USD 10.50');
   });
 
+  await t.step("constructor and of method with negative values", () => {
+    const money = new Money(-10.50, Currency.of('USD'));
+    assertEquals(money.toString(), 'USD -10.50');
+    const moneyOf = Money.of(-10.50, Currency.of('USD'));
+    assertEquals(moneyOf.toString(), 'USD -10.50');
+  });
+
   await t.step("ofMinor method", () => {
     const usd = Money.ofMinor(1050n, Currency.of('USD'));
     assertEquals(usd.toString(), 'USD 10.50');
@@ -78,10 +85,16 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(shareholderC.toString(), 'CHF 108.64');
   });
 
-  await t.step("getMinorAmount and getAmount methods", () => {
+  await t.step("from decimal: getMinorAmount and getAmount methods", () => {
     const money = Money.of(10.50, Currency.of('USD'));
     assertEquals(money.getMinorAmount(), 1050n);
     assertEquals(money.getAmount(), '10.50');
+  });
+
+  await t.step("from minor: getMinorAmount and getAmount methods", () => {
+    const money = Money.ofMinor(2400n, Currency.of('USD'));
+    assertEquals(money.getMinorAmount(), 2400n);
+    assertEquals(money.getAmount(), '24.00');
   });
 
   await t.step("getCurrency method", () => {

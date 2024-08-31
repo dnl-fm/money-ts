@@ -168,7 +168,13 @@ export class Money {
     const scaleFactor = BigInt(Math.pow(10, this.currency.getDefaultFractionDigits()));
     const integerPart = this.amount / scaleFactor;
     const fractionalPart = this.amount % scaleFactor;
-    return this.currency.getDefaultFractionDigits() === 0 ? integerPart.toString() : `${integerPart}.${fractionalPart.toString().padStart(this.currency.getDefaultFractionDigits(), '0')}`;
+    const absFractionalPart = fractionalPart < 0 ? -fractionalPart : fractionalPart;
+
+    if (this.currency.getDefaultFractionDigits() === 0) {
+      return integerPart.toString();
+    }
+
+    return `${integerPart}.${absFractionalPart.toString().padStart(this.currency.getDefaultFractionDigits(), '0')}`;
   }
 
   /**
