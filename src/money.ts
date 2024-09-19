@@ -55,6 +55,34 @@ export class Money {
   }
 
   /**
+   * Serializes an object which might include Money instances.
+   * @param {unknown} obj - The object to serialize.
+   * @returns {string} The serialized JSON string.
+   */
+  static serializeObject(obj: unknown): string {
+    return JSON.stringify(obj, (_, value) => {
+      if (value instanceof Money) {
+        return { amount: value.amount.toString(), currency: value.currency, __money: true };
+      }
+      return value;
+    });
+  }
+
+  /**
+   * Deserializes a JSON string which might include a Money instances.
+   * @param {string} json - The JSON string to deserialize.
+   * @returns {unknown} The deserialized object.
+   */
+  static deserializeObject<T>(json: string): T {
+    return JSON.parse(json, (_, value) => {
+      if (value && typeof value === 'object' && value.__money === true) {
+        return Money.ofMinor(BigInt(value.amount), Currency.of(value.currency));
+      }
+      return value;
+    });
+  }
+
+  /**
    * Returns a string representation of the monetary amount.
    * @returns {string} A string representation of the monetary amount.
    */
