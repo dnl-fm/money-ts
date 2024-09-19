@@ -245,4 +245,64 @@ Deno.test("Money Class Tests", async (t) => {
     const eur = Money.of(100, Currency.of('EUR'));
     assertThrows(() => usd.compareTo(eur), Error);
   });
+
+  await t.step("serializeObject and deserializeObject methods", () => {
+    const usd = Money.of(100.50, Currency.of('USD'));
+    const eur = Money.of(200.75, Currency.of('EUR'));
+    const jpy = Money.of(5000, Currency.of('JPY'));
+
+    type MoneyObject = {
+      usd: Money;
+      eur: Money;
+      jpy: Money;
+      nested: {
+        usd: Money;
+      };
+      array: Money[];
+    };
+
+    const obj: MoneyObject = {
+      usd,
+      eur,
+      jpy,
+      nested: {
+        usd: usd,
+      },
+      array: [usd, eur, jpy],
+    };
+
+    const serialized = Money.serializeObject(obj);
+    const deserialized = Money.deserializeObject<MoneyObject>(serialized);
+
+    // Check if the deserialized object has the correct structure
+    assertEquals(deserialized.usd instanceof Money, true);
+    assertEquals(deserialized.eur instanceof Money, true);
+    assertEquals(deserialized.jpy instanceof Money, true);
+    assertEquals(deserialized.nested.usd instanceof Money, true);
+    assertEquals(deserialized.array[0] instanceof Money, true);
+    assertEquals(deserialized.array[1] instanceof Money, true);
+    assertEquals(deserialized.array[2] instanceof Money, true);
+
+    // Check if the values are correct
+    assertEquals(deserialized.usd.toString(), 'USD 100.50');
+    assertEquals(deserialized.eur.toString(), 'EUR 200.75');
+    assertEquals(deserialized.jpy.toString(), 'JPY 5000');
+    assertEquals(deserialized.nested.usd.toString(), 'USD 100.50');
+    assertEquals(deserialized.array[0].toString(), 'USD 100.50');
+    assertEquals(deserialized.array[1].toString(), 'EUR 200.75');
+    assertEquals(deserialized.array[2].toString(), 'JPY 5000');
+
+    // Test with a simple Money object
+    const simpleMoney = Money.of(150.25, Currency.of('CHF'));
+    const simpleSerialize = Money.serializeObject(simpleMoney);
+    const simpleDeserialize = Money.deserializeObject<Money>(simpleSerialize);
+    assertEquals(simpleDeserialize instanceof Money, true);
+    assertEquals(simpleDeserialize.toString(), 'CHF 150.25');
+
+    // Test with a non-Money object
+    const nonMoneyObj = { name: "John", age: 30 };
+    const nonMoneySerialize = Money.serializeObject(nonMoneyObj);
+    const nonMoneyDeserialize = Money.deserializeObject(nonMoneySerialize);
+    assertEquals(nonMoneyDeserialize, nonMoneyObj);
+  });
 });

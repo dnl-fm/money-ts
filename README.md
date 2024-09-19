@@ -266,6 +266,73 @@ Your users will appreciate the clarity, and your app will look all the more poli
 
 ---
 
+# Serialization and Deserialization
+
+When working with complex objects that include `Money` instances, you might need to serialize these objects for storage or transmission, and then deserialize them later. Money.ts provides convenient static methods to handle this process seamlessly.
+
+### Serializing Objects with Money Instances
+
+The `serializeObject` method allows you to convert an object containing `Money` instances into a JSON string that can be easily stored or transmitted.
+
+```typescript
+const cart = {
+  items: [
+    { name: "Widget", price: Money.of(9.99, usd) },
+    { name: "Gadget", price: Money.of(19.99, usd) }
+  ],
+  total: Money.of(29.98, usd)
+};
+
+const serialized = Money.serializeObject(cart);
+console.log(serialized);
+// Outputs: {"items":[{"name":"Widget","price":{"amount":"999","currency":"USD","__money":true}},{"name":"Gadget","price":{"amount":"1999","currency":"USD","__money":true}}],"total":{"amount":"2998","currency":"USD","__money":true}}
+```
+
+This method ensures that all `Money` instances within your object are properly serialized, maintaining their precision and currency information.
+
+### Deserializing Objects with Money Instances
+
+To reconstruct objects containing `Money` instances from a JSON string, use the deserializeObject method:
+
+```typescript
+const deserializedCart = Money.deserializeObject<typeof cart>(serialized);
+
+console.log(deserializedCart.total.toString()); // Outputs: USD 29.98
+console.log(deserializedCart.items[0].price.toString()); // Outputs: USD 9.99
+```
+
+This method automatically recognizes serialized `Money` instances and reconstructs them, ensuring that you get back the same precise `Money` objects you started with.
+
+### Real-World Example: Storing Cart State
+Let's see how these methods can be useful in a real-world scenario, such as saving and restoring a shopping cart state:
+
+```typescript
+// Assume we have a shopping cart with some items
+const cart = {
+  items: [
+    { name: "Laptop", price: Money.of(999.99, usd) },
+    { name: "Mouse", price: Money.of(29.99, usd) }
+  ],
+  total: Money.of(1029.98, usd)
+};
+
+// Serialize the cart to store in localStorage
+localStorage.setItem('cart', Money.serializeObject(cart));
+
+// Later, when we want to restore the cart state
+const storedCart = localStorage.getItem('cart');
+if (storedCart) {
+  const restoredCart = Money.deserializeObject<typeof cart>(storedCart);
+  
+  console.log(restoredCart.total.formatTo('en-US')); // Outputs: $1,029.98
+  console.log(restoredCart.items[0].price.formatTo('en-US')); // Outputs: $999.99
+}
+```
+
+By using these serialization and deserialization methods, you can easily store complex objects containing `Money` instances, transmit them over the network, or save them to a database, all while maintaining the integrity and precision of your monetary values.
+
+---
+
 ## Storing and Retrieving Money Values in a Database
 
 When working with monetary values in an application, it's common to store these values in a database. Here’s how you can effectively store and retrieve money values using Money.ts.
@@ -297,6 +364,44 @@ console.log(amount.toString()); // Outputs: USD 123.45
 ```
 
 This method ensures that your monetary values are consistently and accurately represented, both in storage and in your application's logic.
+
+**Note on Serialization and Database Storage:**
+
+While the methods described above for storing and retrieving Money values in a database are effective for simple scenarios, the new `serializeObject` and `deserializeObject` methods provide additional flexibility for more complex use cases.
+
+If your database supports JSON storage (like PostgreSQL's JSONB type, MongoDB's document structure or Sqlite), you can use these new methods to serialize entire objects containing Money instances. This approach can be particularly useful when dealing with complex data structures or when you need to maintain the exact structure of your objects.
+
+Here's how you might use the new methods in a database context:
+
+**Saving Complex Objects with Money Values to a Database:**
+
+```typescript
+const order = {
+  id: "12345",
+  items: [
+    { name: "Widget", price: Money.of(9.99, usd) },
+    { name: "Gadget", price: Money.of(19.99, usd) }
+  ],
+  total: Money.of(29.98, usd)
+};
+
+const serializedOrder = Money.serializeObject(order);
+
+// Save `serializedOrder` to your database
+// INSERT INTO orders (id, data) VALUES ('12345', ...);
+```
+
+**Reading Complex Objects with Money Values from a Database:**
+
+```typescript
+// Assume we fetch this from the database
+const storedSerializedOrder = '{"id":"12345","items":[{"name":"Widget","price":{"amount":"999","currency":"USD","__money":true}},{"name":"Gadget","price":{"amount":"1999","currency":"USD","__money":true}}],"total":{"amount":"2998","currency":"USD","__money":true}}';
+
+const order = Money.deserializeObject<typeof order>(storedSerializedOrder);
+
+console.log(order.total.toString()); // Outputs: USD 29.98
+console.log(order.items[0].price.toString()); // Outputs: USD 9.99
+```
 
 ---
 
