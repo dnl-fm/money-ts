@@ -118,8 +118,20 @@ export class Money {
    * @returns {Money} A new Money instance with the product.
    */
   multipliedBy(factor: number | string): Money {
-    const multiplier = BigInt(Math.round(Number(factor) * Math.pow(10, this.currency.getDefaultFractionDigits())));
-    return new Money(this.amount * multiplier / BigInt(Math.pow(10, this.currency.getDefaultFractionDigits())), this.currency);
+    const scale = this.currency.getDefaultFractionDigits();
+    const factorBigInt = this.toBigIntWithScale(factor, scale);
+    return new Money(this.amount * factorBigInt / BigInt(Math.pow(10, scale)), this.currency);
+  }
+
+  /**
+   * Calculates a percentage of the monetary amount.
+   * @param {number} percentage - The percentage as a decimal or a percentage string.
+   * @param {boolean} [asDecimal=true] - Whether the percentage is a decimal or a percentage string.
+   * @returns {Money} A new Money instance with the calculated percentage amount.
+   */
+  percentage(percentage: number, asDecimal: boolean = true): Money {
+    if (!asDecimal) percentage = percentage / 100;
+    return this.multipliedBy(percentage);
   }
 
   /**
@@ -129,9 +141,12 @@ export class Money {
    * @returns {Money} A new Money instance with the quotient.
    */
   dividedBy(divisor: number | string, roundingMode: RoundingMode = RoundingMode.HALF_UP): Money {
-    const scaleFactor = BigInt(Math.pow(10, this.currency.getDefaultFractionDigits()));
-    const divisorBigInt = BigInt(Math.round(Number(divisor) * Number(scaleFactor)));
-    return new Money(this.roundDiv(this.amount * scaleFactor, divisorBigInt, roundingMode), this.currency);
+    const scale = this.currency.getDefaultFractionDigits();
+    const divisorBigInt = this.toBigIntWithScale(divisor, scale);
+
+    // Perform the division with proper scaling
+    const result = this.roundDiv(this.amount * BigInt(Math.pow(10, scale)), divisorBigInt, roundingMode);
+    return new Money(result, this.currency);
   }
 
   /**
@@ -401,6 +416,17 @@ export class Money {
    */
   private bigintToNumber(value: bigint): number {
     return Number(value) / Math.pow(10, this.currency.getDefaultFractionDigits());
+  }
+
+  /**
+   * Converts a number or string to a bigint with a specified scale.
+   * @param {number | string} value - The value to convert.
+   * @param {number} scale - The scale to use.
+   * @returns {bigint} The converted bigint.
+   * @private
+   */
+  private toBigIntWithScale(value: number | string, scale: number): bigint {
+    return BigInt(Math.round(Number(value) * Math.pow(10, scale)));
   }
 }
 

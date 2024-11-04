@@ -319,4 +319,30 @@ Deno.test("Money Class Tests", async (t) => {
     const nonMoneyDeserialize = Money.deserializeObject(nonMoneySerialize);
     assertEquals(nonMoneyDeserialize, nonMoneyObj);
   });
+
+  await t.step("percentage method", () => {
+    const money = Money.of(100, Currency.of('USD'));
+    
+    // Test with decimal inputs
+    assertEquals(money.percentage(0.15).toString(), 'USD 15.00');
+    assertEquals(money.percentage(0.5).toString(), 'USD 50.00');
+    assertEquals(money.percentage(1).toString(), 'USD 100.00');
+    assertEquals(money.percentage(0).toString(), 'USD 0.00');
+    assertEquals(money.percentage(2).toString(), 'USD 200.00');
+    
+    // Test with percentage number inputs
+    assertEquals(money.percentage(15, false).toString(), 'USD 15.00');
+    assertEquals(money.percentage(50, false).toString(), 'USD 50.00');
+    assertEquals(money.percentage(100, false).toString(), 'USD 100.00');
+    
+    // Test with string inputs
+    assertEquals(money.percentage(0.15).toString(), 'USD 15.00');
+    assertEquals(money.percentage(15, false).toString(), 'USD 15.00');
+    assertEquals(money.percentage(1, false).toString(), 'USD 1.00');
+    
+    // Test with different money amounts
+    const smallMoney = Money.of(10, Currency.of('USD'));
+    assertEquals(smallMoney.percentage(15, false).toString(), 'USD 1.50');
+    assertEquals(smallMoney.percentage(0.15).toString(), 'USD 1.50');
+  });
 });
