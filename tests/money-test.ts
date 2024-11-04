@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 import { Currency, CurrencyEntry } from "../src/currency.ts";
-import { Money, RoundingMode } from "../src/money.ts";
+import { Money, PercentageFormat, RoundingMode } from "../src/money.ts";
 
 const mockCurrencyData: CurrencyEntry[] = [
   { code: 'USD', numericCode: 840, name: 'US Dollar', defaultFractionDigits: 2 },
@@ -323,7 +323,7 @@ Deno.test("Money Class Tests", async (t) => {
   await t.step("percentage method", () => {
     const money = Money.of(100, Currency.of('USD'));
     
-    // Test with decimal inputs
+    // Test with decimal inputs (default)
     assertEquals(money.percentage(0.15).toString(), 'USD 15.00');
     assertEquals(money.percentage(0.5).toString(), 'USD 50.00');
     assertEquals(money.percentage(1).toString(), 'USD 100.00');
@@ -331,18 +331,14 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(money.percentage(2).toString(), 'USD 200.00');
     
     // Test with percentage number inputs
-    assertEquals(money.percentage(15, false).toString(), 'USD 15.00');
-    assertEquals(money.percentage(50, false).toString(), 'USD 50.00');
-    assertEquals(money.percentage(100, false).toString(), 'USD 100.00');
-    
-    // Test with string inputs
-    assertEquals(money.percentage(0.15).toString(), 'USD 15.00');
-    assertEquals(money.percentage(15, false).toString(), 'USD 15.00');
-    assertEquals(money.percentage(1, false).toString(), 'USD 1.00');
+    assertEquals(money.percentage(15, PercentageFormat.AS_PERCENTAGE).toString(), 'USD 15.00');
+    assertEquals(money.percentage(50, PercentageFormat.AS_PERCENTAGE).toString(), 'USD 50.00');
+    assertEquals(money.percentage(100, PercentageFormat.AS_PERCENTAGE).toString(), 'USD 100.00');
+    assertEquals(money.percentage(200, PercentageFormat.AS_PERCENTAGE).toString(), 'USD 200.00');
     
     // Test with different money amounts
     const smallMoney = Money.of(10, Currency.of('USD'));
-    assertEquals(smallMoney.percentage(15, false).toString(), 'USD 1.50');
+    assertEquals(smallMoney.percentage(15, PercentageFormat.AS_PERCENTAGE).toString(), 'USD 1.50');
     assertEquals(smallMoney.percentage(0.15).toString(), 'USD 1.50');
   });
 });

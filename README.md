@@ -155,13 +155,34 @@ console.log(remainingBalance.toString()); // Outputs: USD 749.25
 
 #### Multiplication
 
-Calculating taxes or discounts? No problem.
+Simple multiplication of monetary amounts:
 
 ```typescript
-const taxRate = 0.07;
-const taxAmount = totalPay.multipliedBy(taxRate);
+const price = Money.of(10, Currency.of('USD'));
+const quantity = 3;
+const total = price.multipliedBy(quantity);
 
-console.log(taxAmount.toString()); // Outputs: USD 119.00
+console.log(total.toString()); // Outputs: USD 30.00
+```
+
+#### Percentage
+
+Calculate percentages using either decimal or whole numbers:
+
+```typescript
+const price = Money.of(100, Currency.of('USD'));
+
+// Using decimal (0.15 = 15%)
+const discount1 = price.percentage(0.15);
+console.log(discount1.toString()); // Outputs: USD 15.00
+
+// Using whole numbers (15 = 15%)
+const discount2 = price.percentage(15, PercentageFormat.AS_PERCENTAGE);
+console.log(discount2.toString()); // Outputs: USD 15.00
+
+// Calculate tax (7%)
+const tax = price.percentage(7, PercentageFormat.AS_PERCENTAGE);
+console.log(tax.toString()); // Outputs: USD 7.00
 ```
 
 #### Division

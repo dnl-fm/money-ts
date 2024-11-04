@@ -125,12 +125,14 @@ export class Money {
 
   /**
    * Calculates a percentage of the monetary amount.
-   * @param {number} percentage - The percentage as a decimal or a percentage string.
-   * @param {boolean} [asDecimal=true] - Whether the percentage is a decimal or a percentage string.
-   * @returns {Money} A new Money instance with the calculated percentage amount.
+   * @param {number | string} percentage - The percentage value
+   * @param {PercentageFormat} [format=PercentageFormat.AS_DECIMAL] - The format of the input value
+   * @returns {Money} A new Money instance with the calculated percentage amount
    */
-  percentage(percentage: number, asDecimal: boolean = true): Money {
-    if (!asDecimal) percentage = percentage / 100;
+  percentage(percentage: number, format: PercentageFormat = PercentageFormat.AS_DECIMAL): Money {
+    if (format === PercentageFormat.AS_PERCENTAGE) {
+      percentage = percentage / 100;
+    }
     return this.multipliedBy(percentage);
   }
 
@@ -441,4 +443,12 @@ export enum RoundingMode {
   HALF_UP,
   HALF_DOWN,
   HALF_EVEN,
+}
+
+/**
+ * Enumeration of formats for percentage input
+ */
+export enum PercentageFormat {
+  AS_DECIMAL, // For inputs like 0.15 (15%)
+  AS_PERCENTAGE, // For inputs like 15 (15%)
 }
