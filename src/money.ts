@@ -233,15 +233,6 @@ export class Money {
   }
 
   /**
-   * Checks if this Money instance is equal to another.
-   * @param {Money} other - The other Money instance to compare.
-   * @returns {boolean} True if the amounts and currencies are equal, false otherwise.
-   */
-  equals(other: Money): boolean {
-    return this.amount === other.amount && this.currency.is(other.currency);
-  }
-
-  /**
    * Compares this Money instance to another.
    * @param {Money} other - The other Money instance to compare.
    * @returns {number} -1 if this is less than other, 0 if equal, 1 if greater.
@@ -250,6 +241,56 @@ export class Money {
   compareTo(other: Money): number {
     this.assertSameCurrency(other);
     return this.amount < other.amount ? -1 : (this.amount > other.amount ? 1 : 0);
+  }
+
+  /**
+   * Checks if this Money instance is greater than another.
+   * @param {Money} other - The other Money instance to compare.
+   * @returns {boolean} True if this is greater than other, false otherwise.
+   * @throws {Error} If the currencies are different.
+   */
+  isGreaterThan(other: Money): boolean {
+    return this.compareTo(other) === 1;
+  }
+
+  /**
+   * Checks if this Money instance is greater than or equal to another.
+   * @param {Money} other - The other Money instance to compare.
+   * @returns {boolean} True if this is greater than or equal to other, false otherwise.
+   * @throws {Error} If the currencies are different.
+   */
+  isGreaterThanOrSameAs(other: Money): boolean {
+    return this.compareTo(other) === 1 || this.compareTo(other) === 0;
+  }
+
+  /**
+   * Checks if this Money instance is less than another.
+   * @param {Money} other - The other Money instance to compare.
+   * @returns {boolean} True if this is less than other, false otherwise.
+   * @throws {Error} If the currencies are different.
+   */
+  isLessThan(other: Money): boolean {
+    return this.compareTo(other) === -1;
+  }
+
+  /**
+   * Checks if this Money instance is less than or equal to another.
+   * @param {Money} other - The other Money instance to compare.
+   * @returns {boolean} True if this is less than or equal to other, false otherwise.
+   * @throws {Error} If the currencies are different.
+   */
+  isLessThanOrSameAs(other: Money): boolean {
+    return this.compareTo(other) === -1 || this.compareTo(other) === 0;
+  }
+
+  /**
+   * Checks if this Money instance is equal to another.
+   * @param {Money} other - The other Money instance to compare.
+   * @returns {boolean} True if this is equal to other, false otherwise.
+   * @throws {Error} If the currencies are different.
+   */
+  isSameAs(other: Money): boolean {
+    return this.compareTo(other) === 0;
   }
 
   /**

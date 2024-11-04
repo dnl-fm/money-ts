@@ -237,7 +237,7 @@ if (savings.isLessThan(goal)) {
   // Outputs: Keep saving! You're not there yet.
 }
 
-if (totalPay.isGreaterThanOrEqualTo(goal)) {
+if (totalPay.isGreaterThanOrSameAs(goal)) {
   console.log("Goal reached! Time to celebrate.");
   // Outputs: Goal reached! Time to celebrate.
 }

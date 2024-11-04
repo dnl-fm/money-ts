@@ -120,12 +120,12 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(result.replace(/\s/g, '').toLowerCase(), '1,234.56usdollars');
   });
   
-  await t.step("equals method", () => {
+  await t.step("isSame method", () => {
     const money1 = Money.of(10.50, Currency.of('USD'));
     const money2 = Money.of(10.50, Currency.of('USD'));
     const money3 = Money.of(10.50, Currency.of('EUR'));
-    assertEquals(money1.equals(money2), true);
-    assertEquals(money1.equals(money3), false);
+    assertEquals(money1.isSameAs(money2), true);
+    assertThrows(() => money1.isSameAs(money3), Error, "Cannot operate on Money with different currencies");
   });
 
   await t.step("compareTo method", () => {
@@ -134,6 +134,20 @@ Deno.test("Money Class Tests", async (t) => {
     assertEquals(money1.compareTo(money2), 1);
     assertEquals(money2.compareTo(money1), -1);
     assertEquals(money1.compareTo(money1), 0);
+  });
+
+  await t.step("isGreater, isGreaterOrSame, isLess, isLessOrSame, isSame methods", () => {
+    const money1 = Money.of(10.50, Currency.of('USD'));
+    const money2 = Money.of(5.25, Currency.of('USD'));
+    const money3 = Money.of(5.25, Currency.of('USD'));
+    assertEquals(money1.isGreaterThan(money2), true);
+    assertEquals(money2.isGreaterThanOrSameAs(money3), true);
+
+    assertEquals(money2.isLessThan(money1), true);
+    assertEquals(money1.isLessThanOrSameAs(money3), false);
+
+    assertEquals(money1.isSameAs(money2), false);
+    assertEquals(money2.isSameAs(money3), true);
   });
 
   await t.step("isZero, isPositive, isNegative methods", () => {
